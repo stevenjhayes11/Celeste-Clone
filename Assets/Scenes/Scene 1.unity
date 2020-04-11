@@ -970,6 +970,7 @@ MonoBehaviour:
   jumpFactor: 7
   runFactor: 3
   playerVelocity: {x: 0, y: 0}
+  wallJumpXVelocity: 100
   staminaDrainRate: 20000
 --- !u!1001 &8991362332825748538
 PrefabInstance:

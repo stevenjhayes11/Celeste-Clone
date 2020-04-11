@@ -9,7 +9,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float jumpFactor;
     [SerializeField] float runFactor;
     [SerializeField] Vector2 playerVelocity;
+    [SerializeField] float wallJumpXVelocity;
+    [SerializeField] float staminaDrainRate;
     // Start is called before the first frame update
+    GameObject recentWallCollision;
     Rigidbody2D playerBody;
     float stamina;
     bool onGround;
@@ -17,12 +20,15 @@ public class PlayerMovement : MonoBehaviour
     bool holdingRight;
     bool drainStamina;
     bool wallIsRight;
-    [SerializeField] float staminaDrainRate;
+    bool hanging;
+    
     void Start()
     {
+        recentWallCollision = GetComponent<GameObject>();
         playerBody = GetComponent<Rigidbody2D>();
         onGround = false;
         stamina = 100;
+        hanging = false;
         holdingLeft = false;
         holdingRight = false;
         playerVelocity = playerBody.velocity;
@@ -88,8 +94,9 @@ public class PlayerMovement : MonoBehaviour
         {
             onGround = true;
         }
-        else if (collision.gameObject.tag == "Wall")
+        else if (collision.gameObject.tag == "Wall" && recentWallCollision.GetInstanceID() != collision.gameObject.GetInstanceID())
         {
+            recentWallCollision = collision.gameObject;
             drainStamina = true;
             float wallX = collision.transform.position.x;
             float playerX = playerBody.transform.position.x;
@@ -107,6 +114,8 @@ public class PlayerMovement : MonoBehaviour
         }
         if(collision.gameObject.tag == "Wall")
         {
+            recentWallCollision = GetComponent<GameObject>();
+            hanging = false;
             drainStamina = false;
             playerBody.gravityScale = 1.0f;
         }
@@ -114,25 +123,35 @@ public class PlayerMovement : MonoBehaviour
 
     void AttemptWallHang()
     {
-        if(stamina > 0)
+        if(stamina > 0 && drainStamina)
         {
+            hanging = true;
             DrainStamina();
             Hang();
-            print(playerVelocity);
         }
-        else
+        else if (stamina <=0)
         {
             print("NO STAMINA");
             drainStamina = false;
             playerBody.gravityScale = 1.0f;
+        }
+        else
+        {
+            print("voluntary seperation");
         }
     }
     void Hang()
     {
         if ((wallIsRight && holdingRight) || (!wallIsRight && holdingLeft))
         {
+
+            print("in hang");
             playerBody.velocity = new Vector2(0.0f, 0.0f);
             playerBody.gravityScale = 0.0f;
+        }
+        else
+        {
+            drainStamina = false;
         }
     }
     void DrainStamina()
@@ -157,6 +176,18 @@ public class PlayerMovement : MonoBehaviour
         {
             playerBody.velocity = new Vector2(playerBody.velocity.x, jumpFactor);
             onGround = false;
+        }
+        if(hanging)
+        {
+            if(wallIsRight)
+            {
+                playerBody.velocity = new Vector2(-wallJumpXVelocity, jumpFactor);
+            }
+            if (!wallIsRight)
+            {
+                playerBody.velocity = new Vector2(wallJumpXVelocity, jumpFactor);
+            }
+            hanging = false;
         }
         
     }
