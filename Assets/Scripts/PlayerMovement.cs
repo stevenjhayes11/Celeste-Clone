@@ -8,6 +8,7 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float jumpFactor;
     [SerializeField] float runFactor;
+    [SerializeField] Vector2 playerVelocity;
     // Start is called before the first frame update
     Rigidbody2D playerBody;
     float stamina;
@@ -24,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
         stamina = 100;
         holdingLeft = false;
         holdingRight = false;
+        playerVelocity = playerBody.velocity;
     }
 
     // Update is called once per frame
@@ -106,6 +108,7 @@ public class PlayerMovement : MonoBehaviour
         if(collision.gameObject.tag == "Wall")
         {
             drainStamina = false;
+            playerBody.gravityScale = 1.0f;
         }
     }
 
@@ -115,25 +118,22 @@ public class PlayerMovement : MonoBehaviour
         {
             DrainStamina();
             Hang();
+            print(playerVelocity);
         }
         else
         {
             print("NO STAMINA");
+            drainStamina = false;
+            playerBody.gravityScale = 1.0f;
         }
     }
     void Hang()
     {
-        if(wallIsRight && holdingRight)
+        if ((wallIsRight && holdingRight) || (!wallIsRight && holdingLeft))
         {
-            playerBody.velocity = new Vector2(0f, 0f);
+            playerBody.velocity = new Vector2(0.0f, 0.0f);
+            playerBody.gravityScale = 0.0f;
         }
-        if (!wallIsRight && holdingLeft)
-        {
-            playerBody.velocity = new Vector2(0f, 0f);
-        }
-
-
-
     }
     void DrainStamina()
     {
