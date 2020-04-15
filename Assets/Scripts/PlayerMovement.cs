@@ -19,7 +19,6 @@ public class PlayerMovement : MonoBehaviour
     bool holdingRight;
     bool drainStamina;
     bool wallIsRight;
-    bool hanging;
     
     void Start()
     {
@@ -27,7 +26,6 @@ public class PlayerMovement : MonoBehaviour
         playerBody = GetComponent<Rigidbody2D>();
         onGround = false;
         stamina = 100;
-        hanging = false;
         holdingLeft = false;
         holdingRight = false;
     }
@@ -48,10 +46,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if(drainStamina)
-        {
-            AttemptWallHang();
-        }
+        print("update");
         if (Input.GetKey(KeyCode.A))
         {
             holdingLeft = true;
@@ -67,6 +62,13 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             holdingRight = false;
+        }
+        //TODO
+        //for some reason this is not working with keeping the hang going, never enters this if statement
+        if (drainStamina)
+        {
+            print("attempt");
+            AttemptWallHang();
         }
         if (Input.GetKey(KeyCode.L))
         {
@@ -95,20 +97,12 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (collision.gameObject.tag == "Wall" && recentWallCollision.GetInstanceID() != collision.gameObject.GetInstanceID())
         {
-            print("same wall not collided");
             recentWallCollision = collision.gameObject;
-            drainStamina = true;
             float wallX = collision.transform.position.x;
             float playerX = playerBody.transform.position.x;
             wallIsRight = wallX > playerX;
             AttemptWallHang();
         }
-        else if (collision.gameObject.tag == "Wall" && recentWallCollision.GetInstanceID() == collision.gameObject.GetInstanceID())
-        {
-            print("same wall Collided");
-        }
-
-
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -119,7 +113,6 @@ public class PlayerMovement : MonoBehaviour
         }
         if(collision.gameObject.tag == "Wall")
         { 
-            hanging = false;
             drainStamina = false;
             playerBody.gravityScale = 1.0f;
         }
@@ -127,13 +120,14 @@ public class PlayerMovement : MonoBehaviour
 
     void AttemptWallHang()
     {
-        if(stamina > 0 && drainStamina)
+        print("in wall hang" + (!wallIsRight && holdingLeft));
+        if(stamina > 0 && ((wallIsRight && holdingRight) || (!wallIsRight && holdingLeft)))
         {
-            hanging = true;
+            print("hang valid");
             DrainStamina();
             Hang();
         }
-        else if (stamina <=0)
+        else if (stamina <= 0)
         {
             print("NO STAMINA");
             drainStamina = false;
@@ -142,19 +136,13 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             print("voluntary seperation");
+            //drainStamina = false;
         }
     }
     void Hang()
     {
-        if ((wallIsRight && holdingRight) || (!wallIsRight && holdingLeft))
-        {
-            playerBody.velocity = new Vector2(0.0f, 0.0f);
-            playerBody.gravityScale = 0.0f;
-        }
-        else
-        {
-            drainStamina = false;
-        }
+        playerBody.velocity = new Vector2(0.0f, 0.0f);
+        playerBody.gravityScale = 0.0f;
     }
     void DrainStamina()
     {
