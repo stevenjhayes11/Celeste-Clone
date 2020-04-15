@@ -8,7 +8,6 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float jumpFactor;
     [SerializeField] float runFactor;
-    [SerializeField] Vector2 playerVelocity;
     [SerializeField] float wallJumpXVelocity;
     [SerializeField] float staminaDrainRate;
     // Start is called before the first frame update
@@ -31,7 +30,6 @@ public class PlayerMovement : MonoBehaviour
         hanging = false;
         holdingLeft = false;
         holdingRight = false;
-        playerVelocity = playerBody.velocity;
     }
 
     // Update is called once per frame
@@ -93,9 +91,11 @@ public class PlayerMovement : MonoBehaviour
         if (collision.gameObject.tag == "Ground" && playerBody.velocity.y <= Mathf.Epsilon)
         {
             onGround = true;
+            recentWallCollision = GetComponent<GameObject>();
         }
         else if (collision.gameObject.tag == "Wall" && recentWallCollision.GetInstanceID() != collision.gameObject.GetInstanceID())
         {
+            print("same wall not collided");
             recentWallCollision = collision.gameObject;
             drainStamina = true;
             float wallX = collision.transform.position.x;
@@ -103,7 +103,12 @@ public class PlayerMovement : MonoBehaviour
             wallIsRight = wallX > playerX;
             AttemptWallHang();
         }
-        
+        else if (collision.gameObject.tag == "Wall" && recentWallCollision.GetInstanceID() == collision.gameObject.GetInstanceID())
+        {
+            print("same wall Collided");
+        }
+
+
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -113,8 +118,7 @@ public class PlayerMovement : MonoBehaviour
             onGround = false;
         }
         if(collision.gameObject.tag == "Wall")
-        {
-            recentWallCollision = GetComponent<GameObject>();
+        { 
             hanging = false;
             drainStamina = false;
             playerBody.gravityScale = 1.0f;
@@ -144,8 +148,6 @@ public class PlayerMovement : MonoBehaviour
     {
         if ((wallIsRight && holdingRight) || (!wallIsRight && holdingLeft))
         {
-
-            print("in hang");
             playerBody.velocity = new Vector2(0.0f, 0.0f);
             playerBody.gravityScale = 0.0f;
         }
@@ -158,6 +160,12 @@ public class PlayerMovement : MonoBehaviour
     {
         stamina = stamina - (Time.deltaTime * (staminaDrainRate / 500f));
     }
+
+
+
+
+
+
     void LoadLevel()
     {
         SceneManager.LoadScene(GameManager.instance.GetLevel() + 1);
@@ -170,28 +178,6 @@ public class PlayerMovement : MonoBehaviour
     {
         playerBody.velocity = new Vector2(runFactor, playerBody.velocity.y);
     }
-    void Jump()
-    {
-        if(onGround)
-        {
-            playerBody.velocity = new Vector2(playerBody.velocity.x, jumpFactor);
-            onGround = false;
-        }
-        if(hanging)
-        {
-            if(wallIsRight)
-            {
-                playerBody.velocity = new Vector2(-wallJumpXVelocity, jumpFactor);
-            }
-            if (!wallIsRight)
-            {
-                playerBody.velocity = new Vector2(wallJumpXVelocity, jumpFactor);
-            }
-            hanging = false;
-        }
-        
-    }
-
     void StopVertical()
     {
         playerBody.velocity = new Vector2(playerBody.velocity.x, 0f);
@@ -200,6 +186,13 @@ public class PlayerMovement : MonoBehaviour
     {
         playerBody.velocity = new Vector2(0f, playerBody.velocity.y);
     }
-    
+    void Jump()
+    {
+        if (onGround)
+        {
+            playerBody.velocity = new Vector2(playerBody.velocity.x, jumpFactor);
+            onGround = false;
+        }
+    }
 }
 
