@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -14,6 +12,7 @@ public class Player : MonoBehaviour
     bool onGround;
     int jumpCharges;
     float stamina;
+    bool wallJumping;
     GameObject recentWallCollision;
     // Start is called before the first frame update
     void Start()
@@ -23,6 +22,7 @@ public class Player : MonoBehaviour
         playerBody = GetComponent<Rigidbody2D>();
         jumpCharges = 0;
         onWall = false;
+        wallJumping = false;
         onGround = false;
     }
 
@@ -32,11 +32,14 @@ public class Player : MonoBehaviour
         {
             Jump();
         }
-        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) && !wallJumping)
         {
-            
             bool left = Input.GetKey(KeyCode.A);
             MoveHorizontal(left);
+        }
+        else if(wallJumping)
+        {
+            print("no jumping");
         }
         
         
@@ -44,11 +47,11 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D))
+        if((Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D)) && !wallJumping)
         {
             StopHorizontal();
         }
-        if (Input.GetKeyUp(KeyCode.Space) && (playerBody.velocity.y > 0))
+        if (Input.GetKeyUp(KeyCode.Space) && (playerBody.velocity.y > 0) && !wallJumping)
         {
             StopVertical();
         }
@@ -117,10 +120,11 @@ public class Player : MonoBehaviour
     }
     IEnumerator WallJumpWait()
     {
-        print("pre " + onWall);
-        yield return new WaitForSeconds(.5f);
-        onWall = false;
-        print("post " + onWall);
+        wallJumping = true;
+        print("pre " + wallJumping);
+        yield return new WaitForSeconds(1f);
+        wallJumping = false;
+        print("post " + wallJumping);
     }
     void StopVertical()
     {
