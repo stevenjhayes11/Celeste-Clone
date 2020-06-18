@@ -1181,10 +1181,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a183510753fb55429f349f61fc03f97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  runSpeed: 10
+  runSpeed: 5
   accelerationSpeed: 0.5
-  jumpSpeed: 10
+  jumpSpeed: 7
   wallJumpWaitTime: 0.5
+  dashWaitTime: 0.2
+  dashSpeed: 25
 --- !u!1001 &8991362332825748538
 PrefabInstance:
   m_ObjectHideFlags: 0

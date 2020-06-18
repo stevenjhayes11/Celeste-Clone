@@ -8,8 +8,11 @@ public class player3 : MonoBehaviour
     [SerializeField] float accelerationSpeed;
     [SerializeField] float jumpSpeed;
     [SerializeField] float wallJumpWaitTime;
+    [SerializeField] float dashWaitTime;
+    [SerializeField] float dashSpeed;
 
-   playerState currentState;
+    playerState currentState;
+    dashDirection currentDashDirection;
     Rigidbody2D playerBody;
     GameObject recentWallCollision;
     bool playerCanMove;
@@ -21,13 +24,23 @@ public class player3 : MonoBehaviour
     {
         inAir,
         onGround,
-        onWall
+        onWall,
+        dashing
+    }
+    enum dashDirection
+    {
+        left,
+        right,
+        up,
+        down,
+        none
     }
     // Start is called before the first frame update
     void Start()
     {
         playerCanMove = true;
         currentState = playerState.onGround;
+        currentDashDirection = dashDirection.none;
         playerBody = GetComponent<Rigidbody2D>();
         recentWallCollision = GetComponent<GameObject>();
     }
@@ -62,25 +75,53 @@ public class player3 : MonoBehaviour
         {
             playerBody.gravityScale = 1f;
         }
+        
         if (playerCanMove)
         {
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            
+            if(((Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.LeftShift)) ||
+                (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift)) ||
+                (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.LeftShift)) ||
+                (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.LeftShift))) && (currentState != playerState.dashing))
             {
-                bool left = Input.GetKey(KeyCode.A);
-                MoveHorizontal(left);
+                if(Input.GetKey(KeyCode.A))
+                {
+                    currentDashDirection = dashDirection.left;
+                }
+                else if(Input.GetKey(KeyCode.D))
+                {
+                    currentDashDirection = dashDirection.right;
+                }
+                else if (Input.GetKey(KeyCode.W))
+                {
+                    currentDashDirection = dashDirection.up;
+                }
+                else if(Input.GetKey(KeyCode.S))
+                {
+                    currentDashDirection = dashDirection.down;
+                }
+                Dash(currentDashDirection);
             }
-            if (Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D))
+            else
             {
-                StopHorizontal();
-            }
-            if (Input.GetKey(KeyCode.Space))
-            {
-                Jump();
-            }
-            if(Input.GetKeyUp(KeyCode.Space))
-            {
-                if(playerBody.velocity.y > 0)
-                    StopVertical();
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+                {
+                    bool left = Input.GetKey(KeyCode.A);
+                    MoveHorizontal(left);
+                }
+                if (Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D))
+                {
+                    StopHorizontal();
+                }
+                if (Input.GetKey(KeyCode.Space))
+                {
+                    Jump();
+                }
+                if (Input.GetKeyUp(KeyCode.Space))
+                {
+                    if (playerBody.velocity.y > 0)
+                        StopVertical();
+                }
             }
         }
     }
@@ -187,5 +228,50 @@ public class player3 : MonoBehaviour
     {
         yield return new WaitForSeconds(wallJumpWaitTime);
         playerCanMove = true;
+    }
+
+    void Dash(dashDirection direction)
+    {
+        currentState = playerState.dashing;
+        if(direction == dashDirection.left)
+        {
+            DashLeft();
+        }
+        else if(direction == dashDirection.right)
+        {
+            DashRight();
+        }
+        else if (direction == dashDirection.up)
+        {
+            DashUp();
+        }
+        else if (direction == dashDirection.down)
+        {
+            DashDown();
+        }
+        StartCoroutine(DashWait());
+    }
+    IEnumerator DashWait()
+    {
+        yield return new WaitForSeconds(dashWaitTime);
+        print("finished waiting");
+        playerBody.velocity = new Vector2(0f, 0f);
+        currentState = playerState.inAir;
+    }
+    void DashLeft()
+    {
+        playerBody.velocity = new Vector2(-dashSpeed, 0f);
+    }
+    void DashRight()
+    {
+        playerBody.velocity = new Vector2(dashSpeed, 0f);
+    }
+    void DashUp()
+    {
+        playerBody.velocity = new Vector2(0f, dashSpeed);
+    }
+    void DashDown()
+    {
+        playerBody.velocity = new Vector2(0f, -dashSpeed);
     }
 }
